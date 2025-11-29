@@ -14,7 +14,148 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clubs: {
+        Row: {
+          admin_id: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          admin_id?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          admin_id?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clubs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          category: string | null
+          club_id: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          status: Database["public"]["Enums"]["item_status"] | null
+        }
+        Insert: {
+          category?: string | null
+          club_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          status?: Database["public"]["Enums"]["item_status"] | null
+        }
+        Update: {
+          category?: string | null
+          club_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          status?: Database["public"]["Enums"]["item_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          dob: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          student_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          dob: string
+          id: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          student_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          dob?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          student_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      requests: {
+        Row: {
+          actual_return_date: string | null
+          id: string
+          item_id: string
+          request_date: string
+          return_due_date: string | null
+          status: Database["public"]["Enums"]["item_status"] | null
+          user_id: string
+        }
+        Insert: {
+          actual_return_date?: string | null
+          id?: string
+          item_id: string
+          request_date?: string
+          return_due_date?: string | null
+          status?: Database["public"]["Enums"]["item_status"] | null
+          user_id: string
+        }
+        Update: {
+          actual_return_date?: string | null
+          id?: string
+          item_id?: string
+          request_date?: string
+          return_due_date?: string | null
+          status?: Database["public"]["Enums"]["item_status"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +164,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      item_status: "available" | "borrowed" | "maintenance" | "pending"
+      user_role: "student" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +292,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      item_status: ["available", "borrowed", "maintenance", "pending"],
+      user_role: ["student", "admin"],
+    },
   },
 } as const
