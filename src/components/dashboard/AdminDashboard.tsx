@@ -21,10 +21,16 @@ const AdminDashboard = ({ profile }: AdminDashboardProps) => {
 
   useEffect(() => {
     fetchClubAndItems();
-    fetchRequests();
   }, [profile]);
 
+  useEffect(() => {
+    if (club) {
+      fetchRequests();
+    }
+  }, [club]);
+
   const fetchClubAndItems = async () => {
+    setLoading(true);
     try {
       const { data: clubData, error: clubError } = await supabase
         .from("clubs")
@@ -48,6 +54,7 @@ const AdminDashboard = ({ profile }: AdminDashboardProps) => {
       }
     } catch (error) {
       console.error("Error fetching club/items:", error);
+      toast.error("Failed to fetch club data and items.");
     } finally {
       setLoading(false);
     }
@@ -71,31 +78,32 @@ const AdminDashboard = ({ profile }: AdminDashboardProps) => {
             club_id
           )
         `)
-        .eq("items.club_id", club.id)
+        // This is a bit tricky, we need to filter requests where the item's club_id matches our admin's club
+        // .eq("items.club_id", club.id) -> This doesn't work directly on nested properties.
+        // We'll fetch requests and then filter, or do a more complex query if needed.
         .order("request_date", { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+      
+      // Manual filter since direct query is complex
+      const filteredRequests = data?.filter(r => r.items?.club_id === club.id) || [];
+      setRequests(filteredRequests);
+
     } catch (error) {
       console.error("Error fetching requests:", error);
+      toast.error("Failed to fetch item requests.");
     }
   };
 
   const handleAddItem = async (itemData: any) => {
-    if (!club) {
-      toast.error("Please create a club first");
-      return;
-    }
-
     try {
       const { error } = await supabase.from("items").insert({
         ...itemData,
-        club_id: club.id,
       });
 
       if (error) throw error;
       toast.success("Item added successfully");
-      fetchClubAndItems();
+      fetchClubAndItems(); // Refetch items
       setDialogOpen(false);
     } catch (error) {
       console.error("Error adding item:", error);
@@ -112,21 +120,29 @@ const AdminDashboard = ({ profile }: AdminDashboardProps) => {
 
       if (error) throw error;
       
-      toast.success(`Request ${newStatus}`);
-      fetchRequests();
+      toast.success(`Request status updated to ${newStatus}`);
+      fetchRequests(); // Refetch requests
     } catch (error) {
       console.error("Error updating request:", error);
-      toast.error("Failed to update request");
+      toast.error("Failed to update request status");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-center items-center">
+         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   if (!club) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
+        <div className="text-center bg-card p-8 rounded-lg shadow-sm">
           <h2 className="text-2xl font-bold mb-4">No Club Associated</h2>
           <p className="text-muted-foreground">
-            You need to be assigned as a club admin to manage inventory.
+            You are not currently an admin of any club. Please contact support if this is a mistake.
           </p>
         </div>
       </div>
@@ -173,6 +189,7 @@ const AdminDashboard = ({ profile }: AdminDashboardProps) => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onAddItem={handleAddItem}
+        defaultClubId={club.id}
       />
     </div>
   );

@@ -2,19 +2,32 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ArrowRight } from "lucide-react";
+import { BookOpen, ArrowRight, Plus } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
 
+  // Redirect to dashboard if user is already logged in
   useEffect(() => {
-    checkUser();
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // No automatic redirect, let user browse the landing page
+      }
+    };
+    checkSession();
   }, []);
 
-  const checkUser = async () => {
+  const handleAuthAction = (path: string) => {
+    navigate(path);
+  };
+
+  const handlePostItemClick = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       navigate("/dashboard");
+    } else {
+      navigate("/login");
     }
   };
 
@@ -29,10 +42,10 @@ const Index = () => {
             <span className="text-xl font-bold">CampusLend</span>
           </div>
           <div className="space-x-4">
-            <Button variant="ghost" onClick={() => navigate("/login")}>
+            <Button variant="ghost" onClick={() => handleAuthAction("/login")}>
               Sign In
             </Button>
-            <Button onClick={() => navigate("/register")}>
+            <Button onClick={() => handleAuthAction("/register")}>
               Get Started
             </Button>
           </div>
@@ -51,12 +64,20 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="flex justify-center gap-4">
-            <Button size="lg" onClick={() => navigate("/register")}>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button size="lg" onClick={() => handleAuthAction("/register")}>
               Join CampusLend
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/login")}>
+            <Button size="lg" variant="outline" onClick={handlePostItemClick}>
+                <Plus className="mr-2 h-5 w-5" />
+                Post an Item
+            </Button>
+          </div>
+
+          <div className="pt-10 text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Button variant="link" className="text-sm" onClick={() => handleAuthAction("/login")}>
               Sign In
             </Button>
           </div>
